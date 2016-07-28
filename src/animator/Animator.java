@@ -1,17 +1,26 @@
 package animator;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 
 import javax.swing.*;
 
 import java.awt.event.KeyEvent;
 
+/**
+ * Animator, the entry class that contains the main method.
+ * Initializes main window and starts program.
+ * 
+ * @author Neill Johnston
+ */
 public class Animator {
 	public static JFrame mainWindow;
 	
 	/**
-	 * Main.
-	 * @param args 
+	 * Main, entry point into the application.
+	 * 
+	 * @param args	argument list from console
 	 */
 	public static void main(String[] args) {
 		// Set up the native look and feel.
@@ -28,11 +37,12 @@ public class Animator {
 			public void run() {
 				mainWindow = new JFrame("Animator");
 				mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-				mainWindow.setPreferredSize(new Dimension(640, 480));
+				mainWindow.setLayout(new BorderLayout());
 				
+				// Create and add the menubar.
 				JMenuBar menuBar = new JMenuBar();
 				menuBar.setOpaque(true);
-				menuBar.setPreferredSize(new Dimension(mainWindow.getWidth(), 25));
+				menuBar.setPreferredSize(new Dimension(mainWindow.getWidth(), 20));
 				
 				JMenu fileMenu = new JMenu("File");
 				fileMenu.add(new JMenuItem("New", KeyEvent.VK_0));
@@ -40,6 +50,11 @@ public class Animator {
 				
 				mainWindow.setJMenuBar(menuBar);
 				
+				// Create and add the canvas.
+				AnimatorCanvas animatorCanvas = new AnimatorCanvas();
+				mainWindow.add(animatorCanvas, BorderLayout.CENTER);
+				
+				// Pack and display the window.
 				mainWindow.pack();
 				mainWindow.setVisible(true);
 			}

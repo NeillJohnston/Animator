@@ -1,18 +1,27 @@
 package animator;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
 /**
@@ -28,6 +37,8 @@ public class AnimatorCanvas extends JPanel {
 	private double x;
 	private double y;
 	
+	private Stroke editStroke;
+	
 	/**
 	 * Main constructor for the canvas.
 	 * Initializes the mouse listeners and invokes necessary JPanel methods
@@ -40,12 +51,13 @@ public class AnimatorCanvas extends JPanel {
 		x = 0;
 		y = 0;
 		setBackground(Color.white);
+		editStroke = null;
 		
 		// Add the mouse listener.
-		AnimatorCanvasAdapter adapter = new AnimatorCanvasAdapter(this);
-		this.addMouseListener(adapter);
-		this.addMouseMotionListener(adapter);
-		this.addMouseWheelListener(adapter);
+		AnimatorCanvasMouseAdapter mouseAdapter = new AnimatorCanvasMouseAdapter(this);
+		this.addMouseListener(mouseAdapter);
+		this.addMouseMotionListener(mouseAdapter);
+		this.addMouseWheelListener(mouseAdapter);
 		
 		this.setVisible(true);
 	}
@@ -76,6 +88,12 @@ public class AnimatorCanvas extends JPanel {
 			for(Stroke s : Manager.getCurrentFrame())
 				s.paint(g2d);
 		}
+		
+		// If in edit mode, draw the stroke editor.
+		if((Manager.ToolType) Manager.tool.get("stroke") == Manager.ToolType.EDIT &&
+				editStroke != null) {
+			editStroke.paintEditor(g2d);
+		}
 	}
 	
 	/**
@@ -89,10 +107,16 @@ public class AnimatorCanvas extends JPanel {
 	}
 	
 	/**
+	 * Get the handles of the current frame's strokes.
+	 */
+	public void loadHandles() {
+	}
+	
+	/**
 	 * A custom MouseAdapter to handle events from AnimatorCanvas.
 	 * This will create new strokes and add them to the canvas.
 	 */
-	private class AnimatorCanvasAdapter extends MouseAdapter {
+	private class AnimatorCanvasMouseAdapter extends MouseAdapter {
 		static final int STROKE_TOLERANCE = 5;
 		AnimatorCanvas parent;
 		Point lastPoint;
@@ -104,7 +128,7 @@ public class AnimatorCanvas extends JPanel {
 		 * 
 		 * @param parent	the canvas that uses this adapter
 		 */
-		public AnimatorCanvasAdapter(AnimatorCanvas parent) {
+		public AnimatorCanvasMouseAdapter(AnimatorCanvas parent) {
 			super();
 			this.parent = parent;
 			this.lastPoint = new Point(-100, -100);
@@ -117,14 +141,13 @@ public class AnimatorCanvas extends JPanel {
 		 */
 		@Override
 		public void mousePressed(MouseEvent e) {
-			double mousex = e.getPoint().getX();
-			double mousey = e.getPoint().getY();
-			Point finalPoint = new Point((int)((mousex - x) / zoom), (int)((mousey - y) / zoom));
+			Point finalPoint = getRelativePoint(e);
 			
 			if(SwingUtilities.isLeftMouseButton(e)) {
 				currentStroke = Manager.getNewCurrentStroke(finalPoint);
 				
-				if(Manager.getCurrentFrame() != null)
+				if(currentStroke != null &&
+						Manager.getCurrentFrame() != null)
 					Manager.getCurrentFrame().add(currentStroke);
 			}
 			
@@ -139,12 +162,11 @@ public class AnimatorCanvas extends JPanel {
 		 */
 		@Override
 		public void mouseDragged(MouseEvent e) {
-			double mousex = e.getPoint().getX();
-			double mousey = e.getPoint().getY();
-			Point finalPoint = new Point((int)((mousex - x) / zoom), (int)((mousey - y) / zoom));
+			Point finalPoint = getRelativePoint(e);
 			
 			// If within the tolerable range, make a new point.
 			if(SwingUtilities.isLeftMouseButton(e) &&
+					currentStroke != null &&
 					e.getPoint().distance(lastPoint) > STROKE_TOLERANCE) {
 				currentStroke.update(finalPoint);
 				
@@ -161,6 +183,44 @@ public class AnimatorCanvas extends JPanel {
 		}
 		
 		/**
+		 * 
+		 */
+		@Override
+		public void mouseMoved(MouseEvent e) {
+			if((Manager.ToolType) Manager.tool.get("stroke") == Manager.ToolType.EDIT) {
+				boolean foundEditableStroke = false;
+				for(Stroke s : Manager.getCurrentFrame()) {
+					if(s.contains(getRelativePoint(e))) {
+						parent.editStroke = s;
+						foundEditableStroke = true;
+						parent.repaint();
+					}
+				}
+				if(!foundEditableStroke && parent.editStroke != null) {
+					parent.editStroke = null;
+					parent.repaint();
+				}
+			}
+		}
+
+		/**
+		 * Continue the stroke when the mouse is dragged.
+		 * 
+		 * @param e		the event
+		 */
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			Point finalPoint = getRelativePoint(e);
+			
+			// If a stroke has just been completed, end the stroke.
+			if(SwingUtilities.isLeftMouseButton(e) &&
+					currentStroke != null) {
+				currentStroke.end(finalPoint);
+				parent.loadHandles();
+			}
+		}
+		
+		/**
 		 * Zoom when the mouse wheel is used.
 		 * 
 		 * @param e		the event
@@ -172,6 +232,15 @@ public class AnimatorCanvas extends JPanel {
 			// Shift x and y over so that the zoom effect happens at the center of the canvas.
 			parent.x += (parent.zoom - oldZoom) * (parent.x - parent.getWidth() / 2) / oldZoom;
 			parent.y += (parent.zoom - oldZoom) * (parent.y - parent.getHeight() / 2) / oldZoom;
+		}
+		
+		/**
+		 * Helper function to get the "relative" coordinates from an event.
+		 */
+		private Point getRelativePoint(MouseEvent e) {
+			double mousex = e.getPoint().getX();
+			double mousey = e.getPoint().getY();
+			return new Point((int)((mousex - x) / zoom), (int)((mousey - y) / zoom));
 		}
 	}
 }

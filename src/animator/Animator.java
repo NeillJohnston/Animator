@@ -1,7 +1,6 @@
 package animator;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 
 import javax.swing.*;
@@ -18,7 +17,6 @@ import java.awt.event.KeyEvent;
  */
 public class Animator {
 	public static JFrame mainWindow;
-	private static Manager manager;
 	
 	private static AnimatorCanvas animatorCanvas;
 	private static FramePanel framePanel;
@@ -63,7 +61,7 @@ public class Animator {
 				editMenuUndo.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						manager.undo();
+						Manager.undo();
 						animatorCanvas.repaint();
 						System.out.println("undo");
 					}
@@ -89,19 +87,12 @@ public class Animator {
 				mainWindow.pack();
 				mainWindow.setSize(new Dimension(1280, 720));
 				mainWindow.setVisible(true);
+				mainWindow.setFocusable(true);
+				
+				Manager.refreshKeyBindings();
 			}
 		});
 	}
-	
-	/**
-	 * Return the Manager.
-	 * 
-	 * @return	manager
-	 */
-	public static Manager getManager() {
-		return manager;
-	}
-	
 	
 	/**
 	 * Return the animator canvas from GUI.
@@ -126,6 +117,6 @@ public class Animator {
 	 */
 	public static void newManager() {
 		// Load the Manager object.
-		manager = new Manager();
+		new Manager();
 	}
 }

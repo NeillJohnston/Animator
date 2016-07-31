@@ -22,6 +22,7 @@ public class LineStroke extends Stroke {
 	 */
 	@Override
 	public void update(Point p) {
+		super.update(p);
 		end = p;
 	}
 	
@@ -30,7 +31,7 @@ public class LineStroke extends Stroke {
 	 */
 	@Override
 	public void paint(Graphics2D g2d) {
-		g2d.setStroke(new BasicStroke(width,
+		g2d.setStroke(new BasicStroke(strokeWidth,
 				BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g2d.setColor(Color.black);
 		g2d.draw(new Line2D.Float(start.x, start.y, end.x, end.y));

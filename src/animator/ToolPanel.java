@@ -43,12 +43,24 @@ public class ToolPanel extends JPanel {
 		toolButtons.setBorder(BorderFactory.createTitledBorder("Toolbox"));
 		toolButtons.setLayout(new GridLayout(5, 2, 5, 5));
 		
+			// Create and add the edit tool button.
+			JButton toolButtonsEdit = new JButton("Edit");
+			toolButtonsEdit.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					Manager.tool.put("stroke", Manager.ToolType.EDIT);
+					Animator.getGuiAnimatorCanvas().repaint();
+				}
+			});
+			toolButtons.add(toolButtonsEdit);
+		
 			// Create and add the pen tool button.
 			JButton toolButtonsPen = new JButton("Pen");
 			toolButtonsPen.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					Manager.tool.put("stroke", Manager.ToolType.PEN);
+					Animator.getGuiAnimatorCanvas().repaint();
 				}
 			});
 			toolButtons.add(toolButtonsPen);
@@ -59,6 +71,7 @@ public class ToolPanel extends JPanel {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
 					Manager.tool.put("stroke", Manager.ToolType.LINE);
+					Animator.getGuiAnimatorCanvas().repaint();
 				}
 			});
 			toolButtons.add(toolButtonsLine);

@@ -64,6 +64,7 @@ public class FramePanel extends JPanel {
 			// Create and add the timeline.
 			timeline = new TimelineComponent();
 			frameView.add(timeline);
+			frameView.add(Box.createVerticalGlue());
 		
 		add(frameSettings, BorderLayout.WEST);
 		add(frameViewWrapper, BorderLayout.CENTER);

@@ -28,12 +28,23 @@ public class PenStroke extends Stroke {
 	@Override
 	public void paint(Graphics2D g2d) {
 		Point last = start;
-		g2d.setStroke(new BasicStroke(width,
+		g2d.setStroke(new BasicStroke(strokeWidth,
 				BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g2d.setColor(DEFAULT_COLOR);
-		for(Point p : this) {
+		for(Point p : this.points) {
 			g2d.draw(new Line2D.Float(last.x, last.y, p.x, p.y));
 			last = p;
 		}
+	}
+
+	/**
+	 * Transform the Stroke according to a transformation.
+	 * TODO: figure out how to better manage transformation types.
+	 * 
+	 * @param dx	change in x
+	 * @param dy	change in y
+	 */
+	@Override
+	public void transform(double dx, double dy) {
 	}
 }

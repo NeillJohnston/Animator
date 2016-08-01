@@ -41,17 +41,17 @@ public class FramePanel extends JPanel {
 		
 			// Create and add the new frame button.
 			JButton frameSettingsNew = new JButton("New Frame");
-			frameSettingsNew.addActionListener((ActionListener) Manager.actions.get(Manager.ACTION_NEWFRAME));
+			frameSettingsNew.addActionListener(Manager.actions.get(Manager.ACTION_NEWFRAME));
 			frameSettings.add(frameSettingsNew);
 			
 			// Create and add the duplicate frame button.
 			JButton frameSettingsDuplicate = new JButton("Duplicate Frame");
-			frameSettingsDuplicate.addActionListener((ActionListener) Manager.actions.get(Manager.ACTION_DUPLICATEFRAME));
+			frameSettingsDuplicate.addActionListener(Manager.actions.get(Manager.ACTION_DUPLICATEFRAME));
 			frameSettings.add(frameSettingsDuplicate);
 
 			// Create and add the combine frame button.
 			JButton frameSettingsCombine = new JButton("Combine All Strokes");
-			frameSettingsCombine.addActionListener((ActionListener) Manager.actions.get(Manager.ACTION_COMBINEFRAME));
+			frameSettingsCombine.addActionListener(Manager.actions.get(Manager.ACTION_COMBINEFRAME));
 			frameSettings.add(frameSettingsCombine);
 		
 		// Create the layer/frame view panel.
@@ -68,8 +68,19 @@ public class FramePanel extends JPanel {
 			frameView.add(timeline);
 			frameView.add(Box.createVerticalGlue());
 		
+		// Create the play animation panel.
+		JPanel playPanel = new JPanel();
+		playPanel.setPreferredSize(new Dimension(200, 200));
+		playPanel.setBorder(BorderFactory.createTitledBorder("Play"));
+			
+			// Create and add the play button.
+			JButton playPanelPlay = new JButton("Play");
+			playPanelPlay.addActionListener(Manager.actions.get(Manager.ACTION_PLAY));
+			playPanel.add(playPanelPlay);
+		
 		add(frameSettings, BorderLayout.WEST);
 		add(frameViewWrapper, BorderLayout.CENTER);
+		add(playPanel, BorderLayout.EAST);
 	}
 	
 	/**
@@ -105,7 +116,7 @@ public class FramePanel extends JPanel {
 			addMouseListener(new MouseAdapter() {
 				@Override
 				public void mouseClicked(MouseEvent e) {
-					Manager.anim.put("current", (int) e.getX() / FRAME_WIDTH);
+					Manager.anim.put(Manager.ANIM_CURRENT, (int) e.getX() / FRAME_WIDTH);
 					Animator.getGuiAnimatorCanvas().repaint();
 					repaint();
 				}
@@ -121,7 +132,7 @@ public class FramePanel extends JPanel {
 			super.paintComponent(g);
 			
 			g.setColor(Color.lightGray);
-			g.fillRect((int) Manager.anim.get("current") * FRAME_WIDTH, 0, FRAME_WIDTH, getHeight());
+			g.fillRect((int) Manager.anim.get(Manager.ANIM_CURRENT) * FRAME_WIDTH, 0, FRAME_WIDTH, getHeight());
 			g.setColor(Color.black);
 			for(int x = 0; x < getWidth(); x += FRAME_WIDTH)
 				g.drawLine(x, 0, x, getHeight());

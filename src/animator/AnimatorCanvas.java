@@ -76,9 +76,9 @@ public class AnimatorCanvas extends JPanel {
 		g2d.translate(x, y);
 		g2d.scale(zoom, zoom);
 		
-		// If a previous frame exists, onion-skin it.
-		Frame lastFrame = Manager.layers.get(0).get((int) Manager.anim.get("current") - 1);
-		if(lastFrame != null) {
+		// If a previous frame exists and not in play mode, onion-skin it.
+		Frame lastFrame = Manager.layers.get(0).get((int) Manager.anim.get(Manager.ANIM_CURRENT) - 1);
+		if(lastFrame != null && !(boolean) Manager.anim.get(Manager.ANIM_PLAYINGFLAG)) {
 			for(Stroke s : lastFrame)
 				s.paint(g2d, ONION_ALPHA);
 		}
@@ -189,7 +189,9 @@ public class AnimatorCanvas extends JPanel {
 		}
 		
 		/**
+		 * Mouse over enabled for some things, such as stroke editors.
 		 * 
+		 * @param e		the event
 		 */
 		@Override
 		public void mouseMoved(MouseEvent e) {

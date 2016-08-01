@@ -3,6 +3,7 @@ package animator;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,6 +19,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JRootPane;
 import javax.swing.KeyStroke;
+import javax.swing.Timer;
 
 /**
  * Manager is the class that holds all of the important project data.
@@ -45,9 +47,14 @@ public class Manager {
 	public static final String ACTION_PREVFRAME = "action_prefFrame";
 	public static final String ACTION_DUPLICATEFRAME = "action_duplicateFrame";
 	public static final String ACTION_COMBINEFRAME = "action_combineFrame";
+	public static final String ACTION_PLAY = "action_play";
 	
 	// Current frame properties.
 	public static HashMap<String, Object> anim = new HashMap<String, Object>();
+	public static final String ANIM_LAYER = "anim_layer";
+	public static final String ANIM_CURRENT = "anim_current";
+	public static final String ANIM_FPS = "anim_fps";
+	public static final String ANIM_PLAYINGFLAG = "anim_playingFlag";
 	
 	// Tool properties.
 	public static HashMap<String, Object> tool = new HashMap<String, Object>();
@@ -82,8 +89,8 @@ public class Manager {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				while(Manager.getCurrentFrame() != null)
-					anim.put("current", (int) Manager.anim.get("current") + 1);
-				layers.get(0).put((int) Manager.anim.get("current"), new Frame());
+					anim.put(ANIM_CURRENT, (int) Manager.anim.get(ANIM_CURRENT) + 1);
+				layers.get(0).put((int) Manager.anim.get(ANIM_CURRENT), new Frame());
 				Animator.getGuiFramePanel().repaint();
 				Animator.getGuiAnimatorCanvas().repaint();
 			}
@@ -91,7 +98,7 @@ public class Manager {
 		actions.put(ACTION_NEXTFRAME, new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				anim.put("current", (int) anim.get("current") + 1);
+				anim.put(ANIM_CURRENT, (int) anim.get(ANIM_CURRENT) + 1);
 				Animator.getGuiFramePanel().repaint();
 				Animator.getGuiAnimatorCanvas().repaint();
 			}
@@ -99,8 +106,8 @@ public class Manager {
 		actions.put(ACTION_PREVFRAME, new AbstractAction() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if((int) anim.get("current") > 0)
-					anim.put("current", (int) anim.get("current") - 1);
+				if((int) anim.get(ANIM_CURRENT) > 0)
+					anim.put(ANIM_CURRENT, (int) anim.get(ANIM_CURRENT) - 1);
 				Animator.getGuiFramePanel().repaint();
 				Animator.getGuiAnimatorCanvas().repaint();
 			}
@@ -110,8 +117,8 @@ public class Manager {
 			public void actionPerformed(ActionEvent e) {
 				Frame original = getCurrentFrame();
 				while(Manager.getCurrentFrame() != null)
-					anim.put("current", (int) Manager.anim.get("current") + 1);
-				layers.get(0).put((int) Manager.anim.get("current"), Frame.copy(original));
+					anim.put(ANIM_CURRENT, (int) Manager.anim.get(ANIM_CURRENT) + 1);
+				layers.get(0).put((int) Manager.anim.get(ANIM_CURRENT), Frame.copy(original));
 				Animator.getGuiFramePanel().repaint();
 				Animator.getGuiAnimatorCanvas().repaint();
 			}
@@ -138,15 +145,37 @@ public class Manager {
 				}
 			}
 		});
+		actions.put(ACTION_PLAY, new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(getCurrentFrame() == null) {
+					Manager.anim.put(ANIM_CURRENT, 0);
+				}
+				Timer t = new Timer(1000 / (int) Manager.anim.get(Manager.ANIM_FPS), new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						Timer t = (Timer) e.getSource();
+						Manager.actions.get(Manager.ACTION_NEXTFRAME).actionPerformed(e);
+						if(getCurrentFrame() == null) {
+							t.stop();
+							Manager.anim.put(ANIM_PLAYINGFLAG, false);
+						}
+					}
+				});
+				t.start();
+				Manager.anim.put(ANIM_PLAYINGFLAG, true);
+			}
+		});
 		
 		// Initialize with a single blank layer.
 		layers = new ArrayList<Layer>();
 		layers.add(new Layer("untitled"));
 		
 		// Initialize current animation properties.
-		anim.put("layer", layers.get(0));
-		anim.put("current", 0);
-		anim.put("fps", 12);
+		anim.put(ANIM_LAYER, layers.get(0));
+		anim.put(ANIM_CURRENT, 0);
+		anim.put(ANIM_FPS, 12);
+		anim.put(ANIM_PLAYINGFLAG, false);
 		
 		// Initialize tool defaults.
 		tool.put("width", new Integer(10));
@@ -234,6 +263,6 @@ public class Manager {
 	 * @return the frame of the current layer at the current time
 	 */
 	public static Frame getCurrentFrame() {
-		return ((Layer) anim.get("layer")).get((Integer) anim.get("current"));
+		return ((Layer) anim.get(ANIM_LAYER)).get((Integer) anim.get(ANIM_CURRENT));
 	}
 }

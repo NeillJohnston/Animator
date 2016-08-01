@@ -2,6 +2,8 @@ package animator;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Point;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
 import javax.swing.BorderFactory;
@@ -16,6 +18,21 @@ import javax.swing.JComponent;
  */
 public class Frame extends ArrayList<Stroke> {
 	public Frame() {
+	}
+	
+	/**
+	 * Deep-copy an original frame.
+	 * TODO: un-break this.
+	 * TODO: because it really doesn't work now.
+	 * TODO: at all.
+	 * 
+	 * @param original	frame to be copied
+	 * @return a deep copy of Frame original
+	 */
+	public static Frame copy(Frame original) {
+		// TODO: un-break this.
+		Frame clone = (Frame) original.clone();
+		return clone;
 	}
 
 	private class FrameComponent extends JComponent {

@@ -116,7 +116,6 @@ public class Animator {
 	 * Create a new Manager to represent a new file/animation.
 	 */
 	public static void newManager() {
-		// Load the Manager object.
-		new Manager();
+		Manager.init();
 	}
 }

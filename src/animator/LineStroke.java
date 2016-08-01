@@ -25,6 +25,20 @@ public class LineStroke extends Stroke {
 		super.update(p);
 		end = p;
 	}
+
+	/**
+	 * Finish the stroke, update with the last coordinate.
+	 * Clear all irrelevant coordinates.
+	 * 
+	 * @param p		mouse coordinates
+	 */
+	void end(Point p) {
+		end = p;
+		points.clear();
+		points.add(start);
+		points.add(end);
+		update();
+	}
 	
 	/**
 	 * Draw a line with the current width and color.

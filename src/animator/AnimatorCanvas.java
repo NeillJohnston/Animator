@@ -172,6 +172,12 @@ public class AnimatorCanvas extends JPanel {
 				
 				lastPoint = e.getPoint();
 			}
+			// If using the edit tool, edit the current editable stroke.
+			else if(SwingUtilities.isLeftMouseButton(e) &&
+					(Manager.ToolType) Manager.tool.get("stroke") == Manager.ToolType.EDIT &&
+					parent.editStroke != null) {
+				parent.editStroke.edit(e);
+			}
 			// If the middle mouse button is the one dragging, change x and y.
 			else if(SwingUtilities.isMiddleMouseButton(e)) {
 				parent.x += (e.getPoint().getX() - lastPoint.getX());

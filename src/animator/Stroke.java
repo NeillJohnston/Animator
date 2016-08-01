@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import javax.swing.JComponent;
@@ -17,9 +18,11 @@ import javax.swing.JComponent;
  * @author Neill Johnston
  */
 public abstract class Stroke extends Rectangle {
+	//
 	protected Point start;
 	protected Point end;
 	protected ArrayList<Point> points;
+	protected Rectangle dragHandle;
 	
 	// Stroke settings.
 	protected int strokeWidth;
@@ -36,6 +39,7 @@ public abstract class Stroke extends Rectangle {
 		this.strokeWidth = (Integer) Manager.tool.get("width");
 		this.color = (Color) Manager.tool.get("color");
 		this.points.add(start);
+		this.dragHandle = new Rectangle();
 	}
 	
 	/**
@@ -68,7 +72,9 @@ public abstract class Stroke extends Rectangle {
 		g2d.setStroke(new BasicStroke(2,
 				BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL));
 		g2d.setColor(Color.green);
-		g2d.drawRect(this.x, this.y, this.width, this.height);
+		g2d.draw(this);
+		g2d.setColor(Color.orange);
+		g2d.draw(dragHandle);
 	}
 	
 	/**
@@ -88,6 +94,7 @@ public abstract class Stroke extends Rectangle {
 				maxY = q.y;
 		}
 		this.setBounds((int) minX, (int) minY, (int) (maxX - minX), (int) (maxY - minY));
+		this.dragHandle.setBounds((int) this.getCenterX() - 10, (int) this.getCenterY() - 10, 20, 20);
 	}
 	
 	/**
@@ -112,13 +119,25 @@ public abstract class Stroke extends Rectangle {
 	}
 	
 	/**
-	 * Transform the Stroke according to a transformation.
-	 * TODO: figure out how to better manage transformation types.
+	 * Use a MouseEvent to figure out how to edit this stroke.
 	 * 
-	 * @param dx	change in x
-	 * @param dy	change in y
+	 * @param e		MouseEvent information of what happened
 	 */
-	void transform(double dx, double dy) {
-		// Fill in with custom code.
+	void edit(MouseEvent e) {
+		if(this.dragHandle.contains(e.getPoint()))
+			this.translate((int) (e.getX() - this.dragHandle.x - this.dragHandle.width / 2),
+					(int) (e.getY() - this.dragHandle.y - this.dragHandle.height / 2));
+	}
+	
+	/**
+	 * Override translate to also translate all points and handles.
+	 */
+	@Override
+	public void translate(int dx, int dy) {
+		super.translate(dx, dy);
+		for(Point p : this.points) {
+			p.translate(dx, dy);
+		}
+		dragHandle.translate(dx, dy);
 	}
 }

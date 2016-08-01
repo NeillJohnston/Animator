@@ -32,19 +32,18 @@ public class PenStroke extends Stroke {
 				BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		g2d.setColor(DEFAULT_COLOR);
 		for(Point p : this.points) {
-			g2d.draw(new Line2D.Float(last.x, last.y, p.x, p.y));
+			if(p.getClass() != JoinPoint.class)
+				g2d.draw(new Line2D.Float(last.x, last.y, p.x, p.y));
 			last = p;
 		}
 	}
-
+	
 	/**
-	 * Transform the Stroke according to a transformation.
-	 * TODO: figure out how to better manage transformation types.
-	 * 
-	 * @param dx	change in x
-	 * @param dy	change in y
+	 * A helper class that represents a point where no line segment should be drawn between.
 	 */
-	@Override
-	public void transform(double dx, double dy) {
+	class JoinPoint extends Point {
+		JoinPoint(Point p) {
+			this.setLocation(p);
+		}
 	}
 }

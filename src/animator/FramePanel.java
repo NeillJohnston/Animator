@@ -8,6 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -40,17 +41,18 @@ public class FramePanel extends JPanel {
 		
 			// Create and add the new frame button.
 			JButton frameSettingsNew = new JButton("New Frame");
-			frameSettingsNew.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent arg0) {
-					while(Manager.getCurrentFrame() != null)
-						Manager.anim.put("current", (int) Manager.anim.get("current") + 1);
-					Manager.layers.get(0).put((int) Manager.anim.get("current"), new Frame());
-					repaint();
-					Animator.getGuiAnimatorCanvas().repaint();
-				}
-			});
+			frameSettingsNew.addActionListener((ActionListener) Manager.actions.get(Manager.ACTION_NEWFRAME));
 			frameSettings.add(frameSettingsNew);
+			
+			// Create and add the duplicate frame button.
+			JButton frameSettingsDuplicate = new JButton("Duplicate Frame");
+			frameSettingsDuplicate.addActionListener((ActionListener) Manager.actions.get(Manager.ACTION_DUPLICATEFRAME));
+			frameSettings.add(frameSettingsDuplicate);
+
+			// Create and add the combine frame button.
+			JButton frameSettingsCombine = new JButton("Combine All Strokes");
+			frameSettingsCombine.addActionListener((ActionListener) Manager.actions.get(Manager.ACTION_COMBINEFRAME));
+			frameSettings.add(frameSettingsCombine);
 		
 		// Create the layer/frame view panel.
 		JPanel frameView = new JPanel();

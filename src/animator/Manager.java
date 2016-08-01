@@ -31,17 +31,20 @@ import javax.swing.KeyStroke;
  * @author Neill Johnston
  */
 public class Manager {
-	// Key binding constant strings.
-	private static final String HOTKEY_UNDO = "undo";
-	private static final String HOTKEY_NEWFRAME = "newFrame";
-	private static final String HOTKEY_NEXTFRAME = "nextFrame";
-	private static final String HOTKEY_PREVFRAME = "prevFrame";
-	
 	// Preferences file location.
 	private static Path prefsPath;
 	
 	// List of layers.
 	public static ArrayList<Layer> layers;
+	
+	// Global actions.
+	public static HashMap<String, AbstractAction> actions = new HashMap<String, AbstractAction>();
+	public static final String ACTION_UNDO = "action_undo";
+	public static final String ACTION_NEWFRAME = "action_newFrame";
+	public static final String ACTION_NEXTFRAME = "action_nextFrame";
+	public static final String ACTION_PREVFRAME = "action_prefFrame";
+	public static final String ACTION_DUPLICATEFRAME = "action_duplicateFrame";
+	public static final String ACTION_COMBINEFRAME = "action_combineFrame";
 	
 	// Current frame properties.
 	public static HashMap<String, Object> anim = new HashMap<String, Object>();
@@ -54,6 +57,11 @@ public class Manager {
 	
 	// Hotkeys loaded from file.
 	public static HashMap<String, KeyStroke> keys = new HashMap<String, KeyStroke>();
+	public static final String HOTKEY_UNDO = "hotkey_undo";
+	public static final String HOTKEY_NEWFRAME = "hotkey_newFrame";
+	public static final String HOTKEY_NEXTFRAME = "hotkey_nextFrame";
+	public static final String HOTKEY_PREVFRAME = "hotkey_prevFrame";
+	public static final String HOTKEY_DUPLICATEFRAME = "hotkey_duplicateFrame";
 	
 	// Possible tools used by the cursor.
 	public enum ToolType {
@@ -62,7 +70,75 @@ public class Manager {
 		LINE,;
 	}
 	
-	public Manager() {
+	public static void init() {
+		// Initialize global actions.
+		actions.put(ACTION_UNDO, new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				 undo();
+			}
+		});
+		actions.put(ACTION_NEWFRAME, new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				while(Manager.getCurrentFrame() != null)
+					anim.put("current", (int) Manager.anim.get("current") + 1);
+				layers.get(0).put((int) Manager.anim.get("current"), new Frame());
+				Animator.getGuiFramePanel().repaint();
+				Animator.getGuiAnimatorCanvas().repaint();
+			}
+		});
+		actions.put(ACTION_NEXTFRAME, new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				anim.put("current", (int) anim.get("current") + 1);
+				Animator.getGuiFramePanel().repaint();
+				Animator.getGuiAnimatorCanvas().repaint();
+			}
+		});
+		actions.put(ACTION_PREVFRAME, new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if((int) anim.get("current") > 0)
+					anim.put("current", (int) anim.get("current") - 1);
+				Animator.getGuiFramePanel().repaint();
+				Animator.getGuiAnimatorCanvas().repaint();
+			}
+		});
+		actions.put(ACTION_DUPLICATEFRAME, new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Frame original = getCurrentFrame();
+				while(Manager.getCurrentFrame() != null)
+					anim.put("current", (int) Manager.anim.get("current") + 1);
+				layers.get(0).put((int) Manager.anim.get("current"), Frame.copy(original));
+				Animator.getGuiFramePanel().repaint();
+				Animator.getGuiAnimatorCanvas().repaint();
+			}
+		});
+		actions.put(ACTION_COMBINEFRAME, new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Frame current = getCurrentFrame();
+				if(current != null) {
+					PenStroke combined = new PenStroke(current.get(0).start);
+					for(Stroke s : current) {
+						for(Point p : s.points) {
+							if(p == s.start) {
+								combined.update(combined.new JoinPoint(p));
+							} else {
+								combined.update(p);
+							}
+						}
+					}
+					current.clear();
+					current.add(combined);
+					Animator.getGuiFramePanel().repaint();
+					Animator.getGuiAnimatorCanvas().repaint();
+				}
+			}
+		});
+		
 		// Initialize with a single blank layer.
 		layers = new ArrayList<Layer>();
 		layers.add(new Layer("untitled"));
@@ -119,39 +195,10 @@ public class Manager {
 		root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keys.get("prevFrame"), HOTKEY_PREVFRAME);
 		
 		// Create the correct actions.
-		root.getActionMap().put(HOTKEY_UNDO, new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				 undo();
-			}
-		});
-		root.getActionMap().put(HOTKEY_NEWFRAME, new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				while(Manager.getCurrentFrame() != null)
-					anim.put("current", (int) Manager.anim.get("current") + 1);
-				layers.get(0).put((int) Manager.anim.get("current"), new Frame());
-				Animator.getGuiFramePanel().repaint();
-				Animator.getGuiAnimatorCanvas().repaint();
-			}
-		});
-		root.getActionMap().put(HOTKEY_NEXTFRAME, new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				anim.put("current", (int) anim.get("current") + 1);
-				Animator.getGuiFramePanel().repaint();
-				Animator.getGuiAnimatorCanvas().repaint();
-			}
-		});
-		root.getActionMap().put(HOTKEY_PREVFRAME, new AbstractAction() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if((int) anim.get("current") > 0)
-					anim.put("current", (int) anim.get("current") - 1);
-				Animator.getGuiFramePanel().repaint();
-				Animator.getGuiAnimatorCanvas().repaint();
-			}
-		});
+		root.getActionMap().put(HOTKEY_UNDO, actions.get(ACTION_UNDO));
+		root.getActionMap().put(HOTKEY_NEWFRAME, actions.get(ACTION_NEWFRAME));
+		root.getActionMap().put(HOTKEY_NEXTFRAME, actions.get(ACTION_NEXTFRAME));
+		root.getActionMap().put(HOTKEY_PREVFRAME, actions.get(ACTION_PREVFRAME));
 	}
 	
 	/**

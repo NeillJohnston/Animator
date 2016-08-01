@@ -120,13 +120,14 @@ public abstract class Stroke extends Rectangle {
 	
 	/**
 	 * Use a MouseEvent to figure out how to edit this stroke.
+	 * TODO: currently this just translates.
 	 * 
-	 * @param e		MouseEvent information of what happened
+	 * @param p		Point to translate to.
 	 */
-	void edit(MouseEvent e) {
-		if(this.dragHandle.contains(e.getPoint()))
-			this.translate((int) (e.getX() - this.dragHandle.x - this.dragHandle.width / 2),
-					(int) (e.getY() - this.dragHandle.y - this.dragHandle.height / 2));
+	void edit(Point p) {
+		if(this.dragHandle.contains(p))
+			this.translate((int) (p.getX() - this.dragHandle.x - this.dragHandle.width / 2),
+					(int) (p.getY() - this.dragHandle.y - this.dragHandle.height / 2));
 	}
 	
 	/**

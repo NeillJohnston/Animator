@@ -176,7 +176,7 @@ public class AnimatorCanvas extends JPanel {
 			else if(SwingUtilities.isLeftMouseButton(e) &&
 					(Manager.ToolType) Manager.tool.get("stroke") == Manager.ToolType.EDIT &&
 					parent.editStroke != null) {
-				parent.editStroke.edit(e);
+				parent.editStroke.edit(getRelativePoint(e));
 			}
 			// If the middle mouse button is the one dragging, change x and y.
 			else if(SwingUtilities.isMiddleMouseButton(e)) {

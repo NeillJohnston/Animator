@@ -14,11 +14,16 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * Displays keyframes, options for drag-and-drop and other stuff.
@@ -49,11 +54,6 @@ public class FramePanel extends JPanel {
 			frameSettingsDuplicate.addActionListener(Manager.actions.get(Manager.ACTION_DUPLICATEFRAME));
 			frameSettings.add(frameSettingsDuplicate);
 
-			// Create and add the combine frame button.
-			JButton frameSettingsCombine = new JButton("Combine All Strokes");
-			frameSettingsCombine.addActionListener(Manager.actions.get(Manager.ACTION_COMBINEFRAME));
-			frameSettings.add(frameSettingsCombine);
-		
 		// Create the layer/frame view panel.
 		JPanel frameView = new JPanel();
 		frameView.setLayout(new BoxLayout(frameView, BoxLayout.Y_AXIS));
@@ -62,22 +62,44 @@ public class FramePanel extends JPanel {
 		frameViewWrapper.setBorder(BorderFactory.createTitledBorder("Layer/Frame View"));
 		frameViewWrapper.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		frameViewWrapper.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-		
+
 			// Create and add the timeline.
 			timeline = new TimelineComponent();
 			frameView.add(timeline);
 			frameView.add(Box.createVerticalGlue());
-		
+
 		// Create the play animation panel.
 		JPanel playPanel = new JPanel();
 		playPanel.setPreferredSize(new Dimension(200, 200));
-		playPanel.setBorder(BorderFactory.createTitledBorder("Play"));
-			
+		playPanel.setBorder(BorderFactory.createTitledBorder("Preview"));
+
 			// Create and add the play button.
 			JButton playPanelPlay = new JButton("Play");
 			playPanelPlay.addActionListener(Manager.actions.get(Manager.ACTION_PLAY));
 			playPanel.add(playPanelPlay);
-		
+
+			// Create and add the loop checkbox.
+			JCheckBox playPanelLoop = new JCheckBox("Loop");
+			playPanelLoop.addChangeListener(new ChangeListener() {
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					Manager.anim.put(Manager.ANIM_LOOPFLAG, ((JCheckBox) e.getSource()).isSelected());
+				}
+			});;
+			playPanel.add(playPanelLoop);
+
+			// Create and add the FPS spinner.
+			JSpinner playPanelFps = new JSpinner(new SpinnerNumberModel(12, 1, 1000, 1));
+			playPanelFps.addChangeListener(new ChangeListener() {
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					Manager.anim.put(Manager.ANIM_FPS, ((JSpinner) e.getSource()).getValue());
+					Animator.getGuiAnimatorCanvas().repaint();
+					repaint();
+				}
+			});
+			playPanel.add(playPanelFps);
+			
 		add(frameSettings, BorderLayout.WEST);
 		add(frameViewWrapper, BorderLayout.CENTER);
 		add(playPanel, BorderLayout.EAST);

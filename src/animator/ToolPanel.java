@@ -48,7 +48,7 @@ public class ToolPanel extends JPanel {
 			toolButtonsEdit.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					Manager.tool.put("stroke", Manager.ToolType.EDIT);
+					Manager.tool.put(Manager.TOOL_STROKE, Manager.ToolType.EDIT);
 					Animator.getGuiAnimatorCanvas().repaint();
 				}
 			});
@@ -59,7 +59,7 @@ public class ToolPanel extends JPanel {
 			toolButtonsPen.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					Manager.tool.put("stroke", Manager.ToolType.PEN);
+					Manager.tool.put(Manager.TOOL_STROKE, Manager.ToolType.PEN);
 					Animator.getGuiAnimatorCanvas().repaint();
 				}
 			});
@@ -70,7 +70,7 @@ public class ToolPanel extends JPanel {
 			toolButtonsLine.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					Manager.tool.put("stroke", Manager.ToolType.LINE);
+					Manager.tool.put(Manager.TOOL_STROKE, Manager.ToolType.LINE);
 					Animator.getGuiAnimatorCanvas().repaint();
 				}
 			});
@@ -86,14 +86,14 @@ public class ToolPanel extends JPanel {
 			toolSettingsWidth.addChangeListener(new ChangeListener() {
 				@Override
 				public void stateChanged(ChangeEvent e) {
-					Manager.tool.put("width", ((JSlider) e.getSource()).getValue());
+					Manager.tool.put(Manager.TOOL_WIDTH, ((JSlider) e.getSource()).getValue());
 				}
 			});
 			toolSettingsWidth.setMajorTickSpacing(50);
 			toolSettingsWidth.setMinorTickSpacing(10);
 			toolSettingsWidth.setPaintLabels(true);
 			toolSettingsWidth.setPaintTicks(true);
-			toolSettings.add(new JLabel("Width"));
+			toolSettings.add(new JLabel("Stroke width"));
 			toolSettings.add(toolSettingsWidth);
 		
 		add(toolButtons, BorderLayout.NORTH);

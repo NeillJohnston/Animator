@@ -1,27 +1,14 @@
 package animator;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.Iterator;
 
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.BorderFactory;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
 /**
@@ -38,6 +25,7 @@ public class AnimatorCanvas extends JPanel {
 	private double y;
 	
 	private Stroke editStroke;
+	private CanvasObject currentCO;
 	
 	/**
 	 * Main constructor for the canvas.
@@ -63,7 +51,7 @@ public class AnimatorCanvas extends JPanel {
 	}
 	
 	/**
-	 * Override JPanel's paint to call paint on all of the strokes.
+	 * Override JPanel's paint to call paint on all of the canvas objects.
 	 * 
 	 * @param g		Graphics object being used
 	 */
@@ -79,27 +67,32 @@ public class AnimatorCanvas extends JPanel {
 		// If a previous frame exists and not in play mode, onion-skin it.
 		Frame lastFrame = Manager.layers.get(0).get((int) Manager.anim.get(Manager.ANIM_CURRENT) - 1);
 		if(lastFrame != null && !(boolean) Manager.anim.get(Manager.ANIM_PLAYINGFLAG)) {
-			for(Stroke s : lastFrame)
-				s.paint(g2d, ONION_ALPHA);
+			for(CanvasObject co : lastFrame.values())
+				co.paint(g2d, ONION_ALPHA);
 		}
 		
 		// Draw the current frame in full color.
 		if(Manager.getCurrentFrame() != null) {
-			for(Stroke s : Manager.getCurrentFrame())
-				s.paint(g2d);
+			for(CanvasObject co : Manager.getCurrentFrame().values())
+				co.paint(g2d);
 		}
 		
 		// If in edit mode, draw the stroke editor.
-		if((Manager.ToolType) Manager.tool.get("stroke") == Manager.ToolType.EDIT &&
+		if((Manager.ToolType) Manager.tool.get(Manager.TOOL_STROKE) == Manager.ToolType.EDIT &&
 				editStroke != null) {
 			editStroke.paintEditor(g2d);
+		}
+
+		// If currently editing a stroke, paint it as well.
+		if(currentCO != null) {
+			currentCO.paint(g2d);
 		}
 	}
 	
 	/**
 	 * Change the zoom level using a (2^x)-type function.
 	 * 
-	 * @param dzoom		change in zoom
+	 * @param dzoom		change in zoom level
 	 */
 	public void zoom(double dzoom) {
 		zoom *= Math.pow(0.5, dzoom / 5);
@@ -107,21 +100,13 @@ public class AnimatorCanvas extends JPanel {
 	}
 	
 	/**
-	 * Get the handles of the current frame's strokes.
-	 */
-	public void loadHandles() {
-	}
-	
-	/**
 	 * A custom MouseAdapter to handle events from AnimatorCanvas.
 	 * This will create new strokes and add them to the canvas.
 	 */
 	private class AnimatorCanvasMouseAdapter extends MouseAdapter {
-		static final int STROKE_TOLERANCE = 5;
+		static final int STROKE_TOLERANCE = 2;
 		AnimatorCanvas parent;
 		Point lastPoint;
-		
-		Stroke currentStroke;
 		
 		/**
 		 * Constructor including the adapter's parent canvas.
@@ -143,12 +128,14 @@ public class AnimatorCanvas extends JPanel {
 		public void mousePressed(MouseEvent e) {
 			Point finalPoint = getRelativePoint(e);
 			
-			if(SwingUtilities.isLeftMouseButton(e)) {
-				currentStroke = Manager.getNewCurrentStroke(finalPoint);
-				
-				if(currentStroke != null &&
-						Manager.getCurrentFrame() != null)
-					Manager.getCurrentFrame().add(currentStroke);
+			if(SwingUtilities.isLeftMouseButton(e) &&
+					Manager.tool.get(Manager.TOOL_STROKE) != Manager.ToolType.EDIT) {
+				switch((Manager.ToolType) Manager.tool.get(Manager.TOOL_STROKE)) {
+					case LINE:
+						currentCO = new LineObject();
+						currentCO.init(getRelativePoint(e));
+						break;
+				}
 			}
 			
 			lastPoint = e.getPoint();
@@ -166,17 +153,12 @@ public class AnimatorCanvas extends JPanel {
 			
 			// If within the tolerable range, make a new point.
 			if(SwingUtilities.isLeftMouseButton(e) &&
-					currentStroke != null &&
+					Manager.tool.get(Manager.TOOL_STROKE) != Manager.ToolType.EDIT &&
+					currentCO != null &&
 					e.getPoint().distance(lastPoint) > STROKE_TOLERANCE) {
-				currentStroke.update(finalPoint);
-				
+				currentCO.update(finalPoint);
+
 				lastPoint = e.getPoint();
-			}
-			// If using the edit tool, edit the current editable stroke.
-			else if(SwingUtilities.isLeftMouseButton(e) &&
-					(Manager.ToolType) Manager.tool.get("stroke") == Manager.ToolType.EDIT &&
-					parent.editStroke != null) {
-				parent.editStroke.edit(getRelativePoint(e));
 			}
 			// If the middle mouse button is the one dragging, change x and y.
 			else if(SwingUtilities.isMiddleMouseButton(e)) {
@@ -187,28 +169,14 @@ public class AnimatorCanvas extends JPanel {
 			}
 			parent.repaint();
 		}
-		
+
 		/**
 		 * Mouse over enabled for some things, such as stroke editors.
-		 * 
+		 *
 		 * @param e		the event
 		 */
 		@Override
 		public void mouseMoved(MouseEvent e) {
-			if((Manager.ToolType) Manager.tool.get("stroke") == Manager.ToolType.EDIT) {
-				boolean foundEditableStroke = false;
-				for(Stroke s : Manager.getCurrentFrame()) {
-					if(s.contains(getRelativePoint(e))) {
-						parent.editStroke = s;
-						foundEditableStroke = true;
-						parent.repaint();
-					}
-				}
-				if(!foundEditableStroke && parent.editStroke != null) {
-					parent.editStroke = null;
-					parent.repaint();
-				}
-			}
 		}
 
 		/**
@@ -222,9 +190,11 @@ public class AnimatorCanvas extends JPanel {
 			
 			// If a stroke has just been completed, end the stroke.
 			if(SwingUtilities.isLeftMouseButton(e) &&
-					currentStroke != null) {
-				currentStroke.end(finalPoint);
-				parent.loadHandles();
+					Manager.tool.get(Manager.TOOL_STROKE) != Manager.ToolType.EDIT &&
+					currentCO != null) {
+				currentCO.fin();
+				Manager.getCurrentFrame().put(currentCO.hashCode(), currentCO);
+				currentCO = null;
 			}
 		}
 		

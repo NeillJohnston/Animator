@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -12,11 +14,11 @@ import javax.swing.JComponent;
 /**
  * Frame is the basic form of an animation frame.
  * Includes whatever strokes exist to display on the canvas.
- * It is an ArrayList of Stroke objects.
+ * It is a HashMap of CanvasObjects.
  * 
  * @author Neill Johnston
  */
-public class Frame extends ArrayList<Stroke> {
+public class Frame extends HashMap<Integer, CanvasObject> {
 	public Frame() {
 	}
 	
